@@ -1,0 +1,39 @@
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: none; align-items: center; justify-content: center; z-index: 700;
+}
+.modal-bg.show { display: flex; }
+
+.modal {
+  background: var(--bg1); border: 0.5px solid var(--border2);
+  border-radius: var(--rl); padding: 20px; width: 280px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+}
+.modal h3  { font-size: 14px; font-weight: 500; margin-bottom: 3px; color: var(--text1); }
+.modal p   { font-size: 11px; color: var(--text2); line-height: 1.5; margin-bottom: 12px; }
+
+.mp-row {
+  background: var(--bg2); border-radius: var(--r);
+  padding: 8px 11px; display: flex; justify-content: space-between;
+  font-size: 12px; margin-bottom: 11px; color: var(--text1);
+}
+.mp-g { color: var(--green); font-weight: 500; }
+
+.mbtns { display: flex; gap: 6px; }
+.mbtn {
+  flex: 1; padding: 7px; border-radius: var(--r);
+  font-size: 11px; font-weight: 500; cursor: pointer;
+  font-family: inherit; border: none; transition: opacity .15s;
+}
+.mbtn.cancel { background: var(--bg2); border: 0.5px solid var(--border); color: var(--text2); }
+.mbtn.pay    { background: var(--accent); color: #fff; }
+.mbtn:hover  { opacity: .85; }
+
+.key-modal-inp {
+  width: 100%; background: var(--bg2);
+  border: 0.5px solid var(--border); border-radius: var(--r);
+  padding: 8px 10px; font-size: 12px;
+  font-family: var(--font-mono); color: var(--text1); outline: none;
+  margin-top: 4px;
+}
+.key-modal-inp:focus { border-color: var(--accent); }
