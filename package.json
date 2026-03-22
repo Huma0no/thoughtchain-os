@@ -1,0 +1,30 @@
+{
+  "name": "thoughtchain-os",
+  "version": "0.1.0",
+  "description": "Multi-IA idea management system with immutable commits, fragment composer, and semantic bubble map",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start":   "node server/index.js",
+    "dev":     "node --watch server/index.js",
+    "serve":   "npx serve . -p 8080",
+    "lint":    "npx eslint src/**/*.js server/**/*.js"
+  },
+  "dependencies": {
+    "cors":    "^2.8.5",
+    "dotenv":  "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ai", "ideas", "knowledge-management", "multi-ai",
+    "claude", "chatgpt", "grok", "gemini", "pkm"
+  ],
+  "author": "",
+  "license": "MIT"
+}
