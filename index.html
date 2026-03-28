@@ -19,8 +19,6 @@
     html, body { height: 100%; overflow: hidden; }
     body { font-family: var(--font-sans); background: var(--bg0); color: var(--text1); font-size: 13px; }
     .shell { display: flex; height: 100vh; }
-    .screen { flex: 1; display: none; flex-direction: column; overflow: hidden; }
-    .screen.on { display: flex; }
   </style>
 </head>
 <body>
@@ -78,87 +76,111 @@
   <!-- ══ MAIN ══ -->
   <div class="main">
 
-    <!-- TOPBAR -->
-    <div class="topbar">
-      <nav class="tb-tabs">
-        <button class="tbt on" data-screen="arena">Arena</button>
-        <button class="tbt" data-screen="timeline">Timeline</button>
-        <button class="tbt" data-screen="bubbles">Mapa</button>
-        <button class="tbt" data-screen="debate">Debate</button>
-      </nav>
-      <div class="tb-space"></div>
-      <div class="persist-indicator">
-        <div class="persist-dot" id="persist-dot"></div>
-        <span class="persist-label" id="persist-label">cargando...</span>
-      </div>
-      <span class="tb-hint" id="tb-hint">0 commits</span>
-    </div>
-
-    <!-- WORKSPACE -->
+    <!-- WORKSPACE: 3 paneles redimensionables -->
     <div class="workspace" id="workspace">
 
-      <!-- ARENA -->
-      <div class="screen on" id="screen-arena" style="flex-direction:row">
-        <div class="resp-area" id="resp-area">
-          <div class="resp-area-lbl">Respuestas</div>
-          <div class="empty-state" id="empty-state">
-            <div class="es-ico">◎</div>
-            <div class="es-t">Arena lista</div>
-            <div class="es-s">Selecciona IAs en el chat y lanza tu primera consulta</div>
+      <!-- PANEL 1: CHAT -->
+      <div class="panel panel-chat" id="panel-chat">
+        <div class="panel-hd">
+          <span class="panel-hd-label">Chat</span>
+          <div class="persist-indicator">
+            <div class="persist-dot" id="persist-dot"></div>
+            <span class="persist-label" id="persist-label">cargando...</span>
           </div>
         </div>
-        <div class="rz" id="rz"></div>
-        <div class="comp-wrap" id="comp-wrap">
-          <div class="comp-tab" id="comp-tab" onclick="App.toggleComp()">
-            <div class="comp-tab-ico" id="tab-ico">compositor</div>
-            <div class="comp-tab-badge" id="tab-badge">0</div>
+        <div class="chat-main">
+          <div class="resp-area" id="resp-area">
+            <div class="empty-state" id="empty-state">
+              <div class="es-ico">◎</div>
+              <div class="es-t">Chat listo</div>
+              <div class="es-s">Selecciona IAs y escribe tu consulta abajo</div>
+            </div>
           </div>
-          <div class="comp-body">
-            <div class="comp-head">
-              <span class="comp-title">Compositor</span>
-              <span class="fc-badge" id="fc-badge">0</span>
-              <button class="comp-x" onclick="App.toggleComp()">‹</button>
+          <div class="rz" id="rz-comp"></div>
+          <div class="comp-wrap" id="comp-wrap">
+            <div class="comp-tab" id="comp-tab" onclick="App.toggleComp()">
+              <div class="comp-tab-ico" id="tab-ico">compositor</div>
+              <div class="comp-tab-badge" id="tab-badge">0</div>
             </div>
-            <div class="frag-list" id="frag-list">
-              <div class="f-empty" id="f-empty">Selecciona texto en<br>cualquier respuesta<br>para agregar fragmentos</div>
+            <div class="comp-body">
+              <div class="comp-head">
+                <span class="comp-title">Compositor</span>
+                <span class="fc-badge" id="fc-badge">0</span>
+                <button class="comp-x" onclick="App.toggleComp()">‹</button>
+              </div>
+              <div class="frag-list" id="frag-list">
+                <div class="f-empty" id="f-empty">Selecciona texto en<br>cualquier respuesta<br>para agregar fragmentos</div>
+              </div>
+              <div class="comp-controls">
+                <button class="cc-btn" onclick="App.reverseFrags()">invertir</button>
+                <button class="cc-btn" onclick="App.clearFrags()">limpiar</button>
+              </div>
+              <div class="prev-area">
+                <div class="prev-lbl">Vista previa</div>
+                <div class="prev-box" id="prev-box" contenteditable="true"></div>
+              </div>
+              <div class="commit-row">
+                <select class="type-sel" id="commit-type">
+                  <option>idea</option>
+                  <option>insight</option>
+                  <option>relato</option>
+                  <option>proyecto</option>
+                  <option>hipótesis</option>
+                </select>
+                <button class="commit-main" onclick="App.doCommit()">→ commit</button>
+              </div>
             </div>
-            <div class="comp-controls">
-              <button class="cc-btn" onclick="App.reverseFrags()">invertir</button>
-              <button class="cc-btn" onclick="App.clearFrags()">limpiar</button>
-            </div>
-            <div class="prev-area">
-              <div class="prev-lbl">Vista previa</div>
-              <div class="prev-box" id="prev-box" contenteditable="true"></div>
-            </div>
-            <div class="commit-row">
-              <select class="type-sel" id="commit-type">
-                <option>idea</option>
-                <option>insight</option>
-                <option>relato</option>
-                <option>proyecto</option>
-                <option>hipótesis</option>
-              </select>
-              <button class="commit-main" onclick="App.doCommit()">→ commit</button>
+          </div>
+        </div>
+        <!-- Chat input fijo al fondo del panel -->
+        <div class="chatbar">
+          <div class="chat-inner">
+            <div style="flex:1;display:flex;flex-direction:column">
+              <div class="ia-chips" id="ia-chips"></div>
+              <div class="chat-row">
+                <textarea class="chat-inp" id="chat-inp"
+                          placeholder="Escribe tu pregunta o idea..." rows="1"></textarea>
+                <button class="send-btn" id="send-btn" onclick="App.sendAll()">
+                  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="12" x2="7" y2="2"/>
+                    <polyline points="3,6 7,2 11,6"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- TIMELINE -->
-      <div class="screen" id="screen-timeline">
+      <!-- DIVISOR REDIMENSIONABLE 1 -->
+      <div class="panel-rz" id="rz-1"></div>
+
+      <!-- PANEL 2: TIMELINE -->
+      <div class="panel panel-timeline" id="panel-timeline">
+        <div class="panel-hd">
+          <span class="panel-hd-label">Timeline</span>
+          <span class="tb-hint" id="tb-hint">0 commits</span>
+        </div>
         <div class="tl-wrap">
           <div class="tl-axis"></div>
           <div id="tl-commits"></div>
           <div class="empty-state" id="tl-empty" style="height:300px">
             <div class="es-ico">◈</div>
             <div class="es-t">Chain vacía</div>
-            <div class="es-s">Haz tu primer commit en el Arena</div>
+            <div class="es-s">Haz tu primer commit desde el chat</div>
           </div>
         </div>
       </div>
 
-      <!-- BUBBLES -->
-      <div class="screen" id="screen-bubbles">
+      <!-- DIVISOR REDIMENSIONABLE 2 -->
+      <div class="panel-rz" id="rz-2"></div>
+
+      <!-- PANEL 3: MAPA DE IDEAS -->
+      <div class="panel panel-bubbles" id="panel-bubbles">
+        <div class="panel-hd">
+          <span class="panel-hd-label">Mapa de ideas</span>
+        </div>
         <div class="bwrap">
           <canvas id="bcanvas"></canvas>
           <div class="b-tip" id="b-tip"></div>
@@ -166,44 +188,7 @@
         </div>
       </div>
 
-      <!-- DEBATE -->
-      <div class="screen" id="screen-debate">
-        <div class="dthread" id="dthread">
-          <div class="empty-state" style="flex:1">
-            <div class="es-ico">⚡</div>
-            <div class="es-t">Modo debate</div>
-            <div class="es-s">Activa 2+ IAs y escribe el tema en el chat</div>
-          </div>
-        </div>
-        <div class="debate-synth-row">
-          <div class="dsyn" id="debate-synth" contenteditable="true"></div>
-          <button class="commit-main" style="width:86px;flex:none;align-self:flex-end"
-                  onclick="App.commitDebate()">→ commit</button>
-        </div>
-      </div>
-
     </div>
-
-    <!-- CHAT BAR -->
-    <div class="chatbar">
-      <div class="chat-inner">
-        <div style="flex:1;display:flex;flex-direction:column">
-          <div class="ia-chips" id="ia-chips"></div>
-          <div class="chat-row">
-            <textarea class="chat-inp" id="chat-inp"
-                      placeholder="Escribe tu pregunta o idea..." rows="1"></textarea>
-            <button class="send-btn" id="send-btn" onclick="App.sendAll()">
-              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor"
-                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="7" y1="12" x2="7" y2="2"/>
-                <polyline points="3,6 7,2 11,6"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 

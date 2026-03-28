@@ -1,5 +1,52 @@
-/* ── WORKSPACE ──────────────────────────────────────────────────────────────── */
-.workspace { flex: 1; display: flex; overflow: hidden; position: relative; }
+/* ── WORKSPACE: 3 paneles ────────────────────────────────────────────────────── */
+.workspace { flex: 1; display: flex; flex-direction: row; overflow: hidden; position: relative; }
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 180px;
+}
+.panel-chat     { flex: 4 1 0; }
+.panel-timeline { flex: 3 1 0; border-left: 0.5px solid var(--border); border-right: 0.5px solid var(--border); }
+.panel-bubbles  { flex: 3 1 0; }
+
+.panel-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  height: 36px;
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg1);
+}
+.panel-hd-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  flex: 1;
+}
+
+/* Área interior del chat (resp-area + compositor, dirección fila) */
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+/* Divisores redimensionables entre paneles principales */
+.panel-rz {
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.panel-rz:hover, .panel-rz.active { background: var(--accent); }
 
 /* ── RESPONSE AREA ─────────────────────────────────────────────────────────── */
 .resp-area {

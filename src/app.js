@@ -69,6 +69,8 @@ function renderAll() {
   renderHist();
   renderTimeline();
   renderFrags();
+  buildBubbles();
+  setTimeout(drawBubbles, 150);
 }
 
 // ── SIDEBAR ────────────────────────────────────────────────────────────────────
@@ -193,7 +195,6 @@ App.sendAll = () => {
 };
 
 function launch(prompt, actives) {
-  setScreen('arena');
   document.getElementById('empty-state').style.display = 'none';
   document.querySelectorAll('.rcard').forEach(e => e.remove());
   App.clearFrags();
@@ -406,7 +407,7 @@ App.doCommit = () => {
   App.clearFrags();
   document.getElementById('prev-box').textContent = '';
   App.toggleComp(false);
-  updateStats(); renderHist(); renderTimeline();
+  updateStats(); renderHist(); renderTimeline(); buildBubbles(); drawBubbles();
   save();
   toast(`Commit ${hash.slice(0, 7)} · ${type}`);
 };
@@ -467,7 +468,7 @@ App.commitDebate = () => {
   const hash = generateHash(text);
   S.commits.unshift({ hash, type: 'insight', text, ias: Object.keys(S.active).map(id => IA_DEFS.find(x=>x.id===id)?.name).filter(Boolean), time: Date.now(), frags: 0, mode: 'debate' });
   document.getElementById('debate-synth').textContent = '';
-  updateStats(); renderHist(); renderTimeline();
+  updateStats(); renderHist(); renderTimeline(); buildBubbles(); drawBubbles();
   save();
   toast(`Commit ${hash.slice(0, 7)} · debate`);
 };
@@ -643,9 +644,7 @@ function initEvents() {
   chatInp.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      const active = document.querySelector('.tbt.on')?.dataset?.screen;
-      if (active === 'debate') App.startDebate();
-      else App.sendAll();
+      App.sendAll();
     }
   });
 
@@ -679,31 +678,74 @@ function initEvents() {
     }
   });
 
-  // Resize handle
-  const rz = document.getElementById('rz');
-  let rzDrag = false, rzSX = 0, rzSW = 0;
-  rz.addEventListener('mousedown', e => {
-    rzDrag = true; rzSX = e.clientX;
-    rzSW = document.getElementById('comp-wrap').offsetWidth;
-    rz.classList.add('active');
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  });
+  // Resize handles — compositor (rz-comp) y paneles principales (rz-1, rz-2)
+  let rzActive = null;
+
+  function attachResize(handleId, getLeft, getRight, onDone) {
+    const handle = document.getElementById(handleId);
+    if (!handle) return;
+    handle.addEventListener('mousedown', e => {
+      const left  = getLeft();
+      const right = getRight();
+      rzActive = { handle, left, right, startX: e.clientX, startLW: left.offsetWidth, startRW: right.offsetWidth, onDone };
+      handle.classList.add('active');
+      document.body.style.cursor    = 'col-resize';
+      document.body.style.userSelect = 'none';
+    });
+  }
+
+  // Compositor dentro del panel chat
+  attachResize('rz-comp',
+    () => document.getElementById('resp-area'),
+    () => document.getElementById('comp-wrap'),
+    () => {
+      const cw = document.getElementById('comp-wrap');
+      cw.style.transition = 'width .22s cubic-bezier(.4,0,.2,1)';
+    }
+  );
+
+  // Entre panel Chat y Timeline
+  attachResize('rz-1',
+    () => document.getElementById('panel-chat'),
+    () => document.getElementById('panel-timeline'),
+    null
+  );
+
+  // Entre panel Timeline y Bubbles
+  attachResize('rz-2',
+    () => document.getElementById('panel-timeline'),
+    () => document.getElementById('panel-bubbles'),
+    () => { buildBubbles(); drawBubbles(); }
+  );
+
   document.addEventListener('mousemove', e => {
-    if (!rzDrag) return;
-    const nw = Math.max(32, Math.min(480, rzSW + (rzSX - e.clientX)));
-    const cw = document.getElementById('comp-wrap');
-    cw.style.width = nw + 'px';
-    cw.style.transition = 'none';
-    if (nw > 60 && !S.compOpen)  { S.compOpen = true;  cw.classList.add('open'); }
-    if (nw <= 32 && S.compOpen)  { S.compOpen = false; cw.classList.remove('open'); }
+    if (!rzActive) return;
+    const dx  = e.clientX - rzActive.startX;
+    const isComp = rzActive.handle.id === 'rz-comp';
+
+    if (isComp) {
+      const nw = Math.max(32, Math.min(480, rzActive.startRW - dx));
+      const cw = rzActive.right;
+      cw.style.width = nw + 'px';
+      cw.style.transition = 'none';
+      if (nw > 60 && !S.compOpen)  { S.compOpen = true;  cw.classList.add('open'); }
+      if (nw <= 32 && S.compOpen)  { S.compOpen = false; cw.classList.remove('open'); }
+    } else {
+      const newLW = Math.max(180, rzActive.startLW + dx);
+      const newRW = Math.max(180, rzActive.startRW - dx);
+      rzActive.left.style.flex  = `0 0 ${newLW}px`;
+      rzActive.right.style.flex = `0 0 ${newRW}px`;
+      buildBubbles(); drawBubbles();
+    }
   });
+
   document.addEventListener('mouseup', () => {
-    if (!rzDrag) return; rzDrag = false;
-    rz.classList.remove('active');
-    document.body.style.cursor = '';
+    if (!rzActive) return;
+    rzActive.handle.classList.remove('active');
+    document.body.style.cursor    = '';
     document.body.style.userSelect = '';
-    document.getElementById('comp-wrap').style.transition = 'width .22s cubic-bezier(.4,0,.2,1)';
+    if (rzActive.onDone) rzActive.onDone();
+    rzActive = null;
   });
 
   // Bubble canvas events
@@ -733,11 +775,9 @@ function initEvents() {
   });
   canvas.addEventListener('mouseup', () => S.bState.drag = false);
 
-  // Window resize — redraw bubbles
+  // Window resize — redraw bubbles (siempre visible)
   window.addEventListener('resize', () => {
-    if (document.getElementById('screen-bubbles').classList.contains('on')) {
-      buildBubbles(); drawBubbles();
-    }
+    buildBubbles(); drawBubbles();
   });
 }
 
