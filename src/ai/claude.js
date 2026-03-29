@@ -14,12 +14,18 @@ Si es técnica, sé preciso y directo.`;
  * @param {Function} [options.onToken] - streaming token callback (not yet implemented client-side)
  * @returns {Promise<string>}
  */
-export async function callClaude(prompt, { history = [], onToken } = {}) {
+export async function callClaude(prompt, { apiKey, history = [], onToken } = {}) {
+  if (!apiKey) throw new Error('Anthropic API key requerida — actívala en el sidebar');
   const messages = [...history, { role: 'user', content: prompt }];
 
   const response = await fetch(ANTHROPIC_API, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
     body: JSON.stringify({
       model:      MODEL,
       max_tokens: 1000,
