@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
   <title>ThoughtchainOS</title>
   <link rel="stylesheet" href="src/styles/tokens.css">
   <link rel="stylesheet" href="src/styles/sidebar.css">
@@ -246,8 +248,10 @@
   </div>
 </div>
 
-<!-- SCRIPTS (module order matters) -->
-<script type="module" src="src/app.js"></script>
+<!-- SCRIPTS — ?v= forces browser to bypass module cache on each deploy -->
+<script type="module">
+  import('./src/app.js?v=3').catch(console.error);
+</script>
 
 </body>
 </html>
