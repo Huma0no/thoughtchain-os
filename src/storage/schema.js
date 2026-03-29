@@ -47,7 +47,7 @@ export const KEYS = {
  */
 
 export const IA_DEFS = [
-  { id:'claude',     name:'Claude',     abbr:'Cl', c:'#7F77DD', bg:'rgba(127,119,221,.13)', tc:'#7F77DD', free:true },
+  { id:'claude',     name:'Claude',     abbr:'Cl', c:'#7F77DD', bg:'rgba(127,119,221,.13)', tc:'#7F77DD', needsKey:true },
   { id:'gpt',        name:'ChatGPT',    abbr:'GP', c:'#1D9E75', bg:'rgba(29,158,117,.11)',  tc:'#1D9E75', needsKey:true,    price:0.02 },
   { id:'grok',       name:'Grok',       abbr:'Gk', c:'#EF9F27', bg:'rgba(239,159,39,.11)',  tc:'#c4891c', needsKey:true,    price:0.02 },
   { id:'perplexity', name:'Perplexity', abbr:'Px', c:'#D85A30', bg:'rgba(216,90,48,.11)',   tc:'#D85A30', payPerEvent:true, price:0.02 },

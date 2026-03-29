@@ -20,7 +20,8 @@ import { callPerplexity }  from './perplexity.js';
 export async function dispatch(iaId, prompt, { apiKey, history = [], onToken } = {}) {
   switch (iaId) {
     case 'claude':
-      return callClaude(prompt, { history, onToken });
+      if (!apiKey) throw new Error('Anthropic API key required');
+      return callClaude(prompt, { apiKey, history, onToken });
 
     case 'gpt':
       if (!apiKey) throw new Error('OpenAI API key required');
