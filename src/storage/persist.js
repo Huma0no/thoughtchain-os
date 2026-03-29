@@ -4,13 +4,23 @@ import { KEYS } from './schema.js';
 
 /** Simple base64 obfuscation for API keys stored client-side.
  *  NOT true encryption — use a backend proxy in production. */
-const obfuscate   = str => btoa(str);
-const deobfuscate = str => atob(str);
+const obfuscate   = str => btoa(unescape(encodeURIComponent(str)));
+const deobfuscate = str => decodeURIComponent(escape(atob(str)));
+
+function lsGet(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, value); } catch {}
+}
+function lsDel(key) {
+  try { localStorage.removeItem(key); } catch {}
+}
 
 // ── LOAD ──────────────────────────────────────────────────────────────────────
 
 /**
- * Load all persisted state from window.storage.
+ * Load all persisted state from localStorage.
  * Returns a partial state object; missing keys return defaults.
  */
 export async function loadState() {
@@ -23,35 +33,35 @@ export async function loadState() {
     frags:        [],
   };
 
-  await Promise.allSettled([
-
-    window.storage.get(KEYS.commits).then(r => {
-      if (!r) return;
-      const data = JSON.parse(r.value);
+  const rawCommits = lsGet(KEYS.commits);
+  if (rawCommits) {
+    try {
+      const data = JSON.parse(rawCommits);
       result.commits     = data.commits     ?? [];
       result.fuseCount   = data.fuseCount   ?? 0;
       result.debateCount = data.debateCount ?? 0;
-    }),
+    } catch {}
+  }
 
-    window.storage.get(KEYS.active).then(r => {
-      if (!r) return;
-      result.active = JSON.parse(r.value);
-    }),
+  const rawActive = lsGet(KEYS.active);
+  if (rawActive) {
+    try { result.active = JSON.parse(rawActive); } catch {}
+  }
 
-    window.storage.get(KEYS.keys).then(r => {
-      if (!r) return;
-      const encoded = JSON.parse(r.value);
+  const rawKeys = lsGet(KEYS.keys);
+  if (rawKeys) {
+    try {
+      const encoded = JSON.parse(rawKeys);
       Object.keys(encoded).forEach(k => {
         try { result.keys[k] = deobfuscate(encoded[k]); } catch {}
       });
-    }),
+    } catch {}
+  }
 
-    window.storage.get(KEYS.frags).then(r => {
-      if (!r) return;
-      result.frags = JSON.parse(r.value);
-    }),
-
-  ]);
+  const rawFrags = lsGet(KEYS.frags);
+  if (rawFrags) {
+    try { result.frags = JSON.parse(rawFrags); } catch {}
+  }
 
   return result;
 }
@@ -60,19 +70,19 @@ export async function loadState() {
 
 /** Save commits + counters as a single blob (updated together). */
 export async function saveCommits({ commits, fuseCount, debateCount }) {
-  await window.storage.set(KEYS.commits, JSON.stringify({ commits, fuseCount, debateCount }));
+  lsSet(KEYS.commits, JSON.stringify({ commits, fuseCount, debateCount }));
 }
 
 /** Save active IA map. */
 export async function saveActive(active) {
-  await window.storage.set(KEYS.active, JSON.stringify(active));
+  lsSet(KEYS.active, JSON.stringify(active));
 }
 
 /** Save API keys (obfuscated). */
 export async function saveKeys(keys) {
   const encoded = {};
   Object.keys(keys).forEach(k => { if (keys[k]) encoded[k] = obfuscate(keys[k]); });
-  await window.storage.set(KEYS.keys, JSON.stringify(encoded));
+  lsSet(KEYS.keys, JSON.stringify(encoded));
 }
 
 /** Save in-progress compositor fragments (strip DOM-specific fields). */
@@ -80,19 +90,17 @@ export async function saveFrags(frags) {
   const clean = frags.map(({ id, text, ia, c, bg, tc, note }) =>
     ({ id, text, ia, c, bg, tc, note: note ?? '' })
   );
-  await window.storage.set(KEYS.frags, JSON.stringify(clean));
+  lsSet(KEYS.frags, JSON.stringify(clean));
 }
 
 // ── CLEAR ─────────────────────────────────────────────────────────────────────
 
 /** Delete all ThoughtchainOS data from storage. */
 export async function clearAll() {
-  await Promise.allSettled([
-    window.storage.delete(KEYS.commits),
-    window.storage.delete(KEYS.active),
-    window.storage.delete(KEYS.keys),
-    window.storage.delete(KEYS.frags),
-  ]);
+  lsDel(KEYS.commits);
+  lsDel(KEYS.active);
+  lsDel(KEYS.keys);
+  lsDel(KEYS.frags);
 }
 
 // ── DEBOUNCED SAVE FACTORY ────────────────────────────────────────────────────
