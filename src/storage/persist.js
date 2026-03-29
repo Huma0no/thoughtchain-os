@@ -23,35 +23,27 @@ export async function loadState() {
     frags:        [],
   };
 
-  await Promise.allSettled([
+  const get = key => localStorage.getItem(key);
 
-    window.storage.get(KEYS.commits).then(r => {
-      if (!r) return;
-      const data = JSON.parse(r.value);
-      result.commits     = data.commits     ?? [];
-      result.fuseCount   = data.fuseCount   ?? 0;
-      result.debateCount = data.debateCount ?? 0;
-    }),
+  try {
+    const r = get(KEYS.commits);
+    if (r) { const data = JSON.parse(r); result.commits = data.commits ?? []; result.fuseCount = data.fuseCount ?? 0; result.debateCount = data.debateCount ?? 0; }
+  } catch {}
 
-    window.storage.get(KEYS.active).then(r => {
-      if (!r) return;
-      result.active = JSON.parse(r.value);
-    }),
+  try {
+    const r = get(KEYS.active);
+    if (r) result.active = JSON.parse(r);
+  } catch {}
 
-    window.storage.get(KEYS.keys).then(r => {
-      if (!r) return;
-      const encoded = JSON.parse(r.value);
-      Object.keys(encoded).forEach(k => {
-        try { result.keys[k] = deobfuscate(encoded[k]); } catch {}
-      });
-    }),
+  try {
+    const r = get(KEYS.keys);
+    if (r) { const encoded = JSON.parse(r); Object.keys(encoded).forEach(k => { try { result.keys[k] = deobfuscate(encoded[k]); } catch {} }); }
+  } catch {}
 
-    window.storage.get(KEYS.frags).then(r => {
-      if (!r) return;
-      result.frags = JSON.parse(r.value);
-    }),
-
-  ]);
+  try {
+    const r = get(KEYS.frags);
+    if (r) result.frags = JSON.parse(r);
+  } catch {}
 
   return result;
 }
@@ -60,19 +52,19 @@ export async function loadState() {
 
 /** Save commits + counters as a single blob (updated together). */
 export async function saveCommits({ commits, fuseCount, debateCount }) {
-  await window.storage.set(KEYS.commits, JSON.stringify({ commits, fuseCount, debateCount }));
+  localStorage.setItem(KEYS.commits, JSON.stringify({ commits, fuseCount, debateCount }));
 }
 
 /** Save active IA map. */
 export async function saveActive(active) {
-  await window.storage.set(KEYS.active, JSON.stringify(active));
+  localStorage.setItem(KEYS.active, JSON.stringify(active));
 }
 
 /** Save API keys (obfuscated). */
 export async function saveKeys(keys) {
   const encoded = {};
   Object.keys(keys).forEach(k => { if (keys[k]) encoded[k] = obfuscate(keys[k]); });
-  await window.storage.set(KEYS.keys, JSON.stringify(encoded));
+  localStorage.setItem(KEYS.keys, JSON.stringify(encoded));
 }
 
 /** Save in-progress compositor fragments (strip DOM-specific fields). */
@@ -80,19 +72,14 @@ export async function saveFrags(frags) {
   const clean = frags.map(({ id, text, ia, c, bg, tc, note }) =>
     ({ id, text, ia, c, bg, tc, note: note ?? '' })
   );
-  await window.storage.set(KEYS.frags, JSON.stringify(clean));
+  localStorage.setItem(KEYS.frags, JSON.stringify(clean));
 }
 
 // ── CLEAR ─────────────────────────────────────────────────────────────────────
 
 /** Delete all ThoughtchainOS data from storage. */
 export async function clearAll() {
-  await Promise.allSettled([
-    window.storage.delete(KEYS.commits),
-    window.storage.delete(KEYS.active),
-    window.storage.delete(KEYS.keys),
-    window.storage.delete(KEYS.frags),
-  ]);
+  [KEYS.commits, KEYS.active, KEYS.keys, KEYS.frags].forEach(k => localStorage.removeItem(k));
 }
 
 // ── DEBOUNCED SAVE FACTORY ────────────────────────────────────────────────────
