@@ -275,7 +275,7 @@ function streamText(text, body, time, acts, t0) {
       return;
     }
     body.textContent += (i > 0 ? ' ' : '') + words[i];
-    i += 3;
+    i += 1;
   }, 25);
 }
 
